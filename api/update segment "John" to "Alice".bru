@@ -1,0 +1,26 @@
+meta {
+  name: update segment "John" to "Alice"
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/api/segments
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "segment": 0,
+    "name": "Alice"
+  }
+}
+
+assert {
+  res.body: eq saved Alice to segment 0
+}

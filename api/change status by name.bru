@@ -1,0 +1,22 @@
+meta {
+  name: change status by name
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{host}}/api/status
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Alice",
+    "status": "free"
+  }
+}
+
+assert {
+  res.body: eq ok
+}

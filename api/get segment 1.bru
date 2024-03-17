@@ -1,0 +1,20 @@
+meta {
+  name: get segment 1
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{host}}/api/segments?segment=1
+  body: none
+  auth: none
+}
+
+query {
+  segment: 1
+}
+
+assert {
+  res.body.name: eq Bob
+  res.body.status: eq occupied
+}

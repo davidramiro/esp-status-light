@@ -1,0 +1,22 @@
+meta {
+  name: change status by segment id
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{host}}/api/status
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "segment": 1,
+    "status": "occupied"
+  }
+}
+
+assert {
+  res.body: eq ok
+}

@@ -1,0 +1,22 @@
+meta {
+  name: change status with wrong name
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{host}}/api/status
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "segment": 1,
+    "status": "happy"
+  }
+}
+
+assert {
+  res.body: eq invalid status identifier
+}

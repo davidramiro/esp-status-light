@@ -1,0 +1,21 @@
+meta {
+  name: turn off lights
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{host}}/api/leds
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "leds": false
+  }
+}
+
+assert {
+  res.body: eq leds set to 0
+}

@@ -1,0 +1,21 @@
+meta {
+  name: turn lights back on
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{host}}/api/leds
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "leds": true
+  }
+}
+
+assert {
+  res.body: eq leds set to 1
+}

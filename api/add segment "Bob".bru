@@ -1,0 +1,26 @@
+meta {
+  name: add segment "Bob"
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/segments
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "segment": 1,
+    "name": "Bob"
+  }
+}
+
+assert {
+  res.body: eq saved Bob to segment 1
+}

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "esp-status-light",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
