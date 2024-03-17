@@ -1,10 +1,18 @@
 #include "main.h"
-#include <WifiCredentials.h>
+
+#if __has_include("WifiCredentials.h")
+#include "WifiCredentials.h"
+#else
+#define WIFI_SSID "YOUR_SSID"
+#define WIFI_PASSWORD "YOUR_PASSWORD"
+#endif
+
 #if defined(ESP8266)
 #include <ESP8266WiFi.h>
 #elif defined(ESP32)
 #include <WiFi.h>
 #endif
+
 #include "eeprom.h"
 #include "server.h"
 #include "leds.h"

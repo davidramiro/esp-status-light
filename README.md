@@ -1,5 +1,7 @@
 # esp-status-light
 
+Simple multipurpose light to show different statuses on an array of LEDs. Exemplary use case: placed between two office doors, each half of the ring showing if the person within the office is free to talk or occupied.
+
 ## Setup
 
 Any ESP board with WiFi and a WS2812 LED strip, matrix or ring should work.
