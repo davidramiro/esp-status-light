@@ -3,6 +3,10 @@
 void initEEPROM()
 {
     EEPROM.begin(4096);
+
+    if (getBrightnessFromEEPROM() == 0) {
+        saveBrightnessToEEPROM(100);
+    }
 }
 
 bool writeSegmentNameToEEPROM(uint8 segment, const char name[])
@@ -82,4 +86,16 @@ bool findSegmentFromName(const char *name, uint8 *segment)
     }
 
     return false;
+}
+
+bool saveBrightnessToEEPROM(uint8 brightness) {
+    Log.verboseln("saving brightness value %d to eeprom", brightness);
+    EEPROM.write(BRIGHTNESS_EEPROM_ADDR, brightness);
+    return EEPROM.commit();
+}
+
+uint8 getBrightnessFromEEPROM() {
+    uint8 brightness = EEPROM.read(BRIGHTNESS_EEPROM_ADDR);
+    Log.verboseln("read brightness %d from eeprom", brightness);
+    return brightness;
 }

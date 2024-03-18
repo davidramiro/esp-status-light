@@ -1,7 +1,7 @@
 meta {
   name: change status by segment id
   type: http
-  seq: 6
+  seq: 7
 }
 
 put {
@@ -18,5 +18,5 @@ body:json {
 }
 
 assert {
-  res.body: eq ok
+  res.body: eq changed segment 1 to status occupied with brightness 42
 }

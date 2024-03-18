@@ -37,7 +37,7 @@ void initServer()
 
     server.on(
         "/api/leds", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-        { handlePostLEDs(data, len, request); });
+        { handlePutLEDs(data, len, request); });
 
     server.onNotFound(handleNotFound);
 
@@ -100,9 +100,9 @@ void handleGetSegments(AsyncWebServerRequest *request)
     }
 }
 
-void handlePostLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
+void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
 {
-    Log.infoln("POST /api/leds");
+    Log.infoln("PUT /api/leds");
 
     JsonDocument obj;
     DeserializationError error = deserializeJson(obj, (const char *)data, len);
@@ -114,7 +114,26 @@ void handlePostLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
         return;
     }
 
-    bool ledStatus = obj["leds"];
+    uint8 brightness = getBrightnessFromEEPROM();
+
+    if (obj.containsKey("brightness")) {
+        brightness = obj["brightness"];
+        if (brightness > 100 || brightness < 1) {
+            request->send(400, mimeTypeText,"invalid brightness, stay between 1 and 100");
+            return;
+        }
+        bool success = saveBrightnessToEEPROM(brightness);
+        if (!success) {
+            request->send(500, mimeTypeText,"error saving brightness");
+            return;
+        }
+    }
+
+    bool ledStatus = true;
+
+    if (obj.containsKey("leds")) {
+        ledStatus = obj["leds"];
+    }
 
     if (ledStatus)
     {
@@ -122,10 +141,11 @@ void handlePostLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
     }
     else
     {
+        brightness = 0;
         turnOffLeds();
     }
 
-    sprintf(responseBuffer, "leds set to %d", int(ledStatus));
+    sprintf(responseBuffer, "leds set to %d", brightness);
     request->send(200, mimeTypeText, String(responseBuffer));
 }
 
@@ -197,15 +217,16 @@ void handlePutStatus(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
     }
     else if (obj.containsKey("name"))
     {
-        bool found = findSegmentFromName(obj["name"], &segment);
+        const char *name = obj["name"];
+        bool found = findSegmentFromName(name, &segment);
         if (!found)
         {
-            Log.warningln("segment for name %s not found", obj["name"]);
+            Log.warningln("segment for name %s not found", name);
             request->send(404, mimeTypeText, "name not found");
             return;
         }
 
-        Log.verboseln("status change request for name %s, found on segment %d", obj["name"], segment);
+        Log.verboseln("status change request for name %s, found on segment %d", name, segment);
     }
 
     if (ledsPerSegment * (segment + 1) > NUMPIXELS)
@@ -227,7 +248,8 @@ void handlePutStatus(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
 
     writeBufferToLeds(statusColorIndexBuffer);
 
-    request->send(200, mimeTypeText, "ok");
+    sprintf(responseBuffer, "changed segment %d to status %s with brightness %d", segment, status, getBrightnessFromEEPROM());
+    request->send(200, mimeTypeText, String(responseBuffer));
 }
 
 void handleNotFound(AsyncWebServerRequest *request)

@@ -12,6 +12,6 @@
 void handlePostSegment(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
 void handlePutStatus(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
 void handleGetSegments(AsyncWebServerRequest *request);
-void handlePostLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
+void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
 void handleNotFound(AsyncWebServerRequest *request);
 void initServer();

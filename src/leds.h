@@ -10,7 +10,7 @@ struct StatusColor
 };
 
 const int ledsPerSegment = NUMPIXELS / NUM_SEGMENTS;
-const StatusColor colors[] = {{strdup("free"), 0, 80, 0}, {strdup("dnd"), 80, 0, 0}, {strdup("occupied"), 60, 40, 0}, {strdup("off"), 0, 0, 0}};
+const StatusColor colors[] = {{strdup("free"), 0, 127, 0}, {strdup("dnd"), 127, 0, 0}, {strdup("occupied"), 127, 127, 0}, {strdup("off"), 0, 0, 0}};
 
 void initLEDs();
 void writeBufferToLeds(int8 indexBuffer[]);

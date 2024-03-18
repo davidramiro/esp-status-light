@@ -1,7 +1,7 @@
 meta {
   name: get all segments
   type: http
-  seq: 9
+  seq: 10
 }
 
 get {
@@ -13,9 +13,9 @@ get {
 assert {
   res.body: length 2
   res.body[0].name: eq Alice
-  res.body[0].position: eq 0
+  res.body[0].segment: eq 0
   res.body[0].status: eq free
   res.body[1].name: eq Bob
-  res.body[1].position: eq 1
+  res.body[1].segment: eq 1
   res.body[1].status: eq occupied
 }

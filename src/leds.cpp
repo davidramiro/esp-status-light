@@ -1,4 +1,5 @@
 #include "leds.h"
+#include "eeprom.h"
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -11,16 +12,21 @@ void initLEDs()
 
 void writeBufferToLeds(int8 indexBuffer[])
 {
+    uint8 brightness = getBrightnessFromEEPROM();
+
     for (uint i = 0; i < NUM_SEGMENTS; i++)
     {
         StatusColor statusColor = colors[indexBuffer[i]];
-        uint8_t targetRed = statusColor.red;
-        uint8_t targetGreen = statusColor.green;
-        uint8_t targetBlue = statusColor.blue;
+        uint8_t targetRed = statusColor.red * brightness / 100;
+        uint8_t targetGreen = statusColor.green * brightness / 100;
+        uint8_t targetBlue = statusColor.blue * brightness / 100;
         uint32_t color = pixels.getPixelColor(i * ledsPerSegment);
         uint8_t red = (color >> 16) & 255;
         uint8_t green = (color >> 8) & 255;
         uint8_t blue = color & 255;
+
+        Log.verboseln("current color: %d, %d, %d", red, green, blue);
+        Log.verboseln("target color: %d, %d, %d", targetRed, targetGreen, targetBlue);
 
         if (red == targetRed && blue == targetBlue && green == targetGreen)
         {
@@ -57,7 +63,7 @@ void writeBufferToLeds(int8 indexBuffer[])
             pixels.fill(pixels.Color(red, green, blue), i * ledsPerSegment, ledsPerSegment);
             pixels.show();
 
-            delay(10);
+            delay(7);
         }
     }
 }

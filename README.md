@@ -34,7 +34,7 @@ Body:
 }
 
 Response: 
-ok
+changed segment 1 to status occupied with brightness 100
 ```
 
 Set status of a named segment:
@@ -48,7 +48,7 @@ Body:
   "status": "free"
 }
 Response: 
-ok
+changed segment 3 to status occupied with brightness 100
 ```
 
 Add name to segment:
@@ -97,7 +97,7 @@ Response:
 
 Toggle light status (keeping segment status):
 ```
-POST /api/leds
+PUT /api/leds
 
 Body:
 {
@@ -107,3 +107,17 @@ Body:
 Response: 
 leds set to 0
 ```
+
+Set LED brightness from 1 to 100
+```
+PUT /api/leds
+
+Body:
+{
+  "brightness": 42
+}
+
+Response: 
+leds set to 42
+```
+
