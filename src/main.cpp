@@ -20,7 +20,7 @@
 void setup()
 {
   Serial.begin(115200);
-  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Log.begin(LOG_LEVEL, &Serial);
   while (!Serial)
     ;
 
