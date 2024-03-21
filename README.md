@@ -1,6 +1,11 @@
 # esp-status-light
 
+
+![ESP Status light](light.jpg)
+
 Simple multipurpose light to show different statuses on an array of LEDs. Exemplary use case: placed between two office doors, each half of the ring showing if the person within the office is free to talk or occupied.
+
+3D printed case by marcluer is available [on Thingiverse](https://www.thingiverse.com/thing:3080212).
 
 ## Setup
 
@@ -78,7 +83,7 @@ Response:
 
 Get current status of all segments:
 ```
-GET /api/segments?segment=<id>
+GET /api/segments
 
 Response:
 [
@@ -120,4 +125,3 @@ Body:
 Response: 
 leds set to 42
 ```
-
