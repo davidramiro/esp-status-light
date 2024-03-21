@@ -28,6 +28,7 @@ void setup()
   initLEDs();
 
   WiFi.mode(WIFI_STA);
+  WiFi.hostname(ESP_HOST_NAME);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   int8_t wifiStatusCode = WiFi.waitForConnectResult();
   if (wifiStatusCode != WL_CONNECTED)
