@@ -4,13 +4,15 @@
 #elif defined(ESP32)
 #include <AsyncTCP.h>
 #endif
-#include <ESPAsyncWebServer.h>
+#include "Main.h"
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
-#include "Main.h"
+#include <ESPAsyncWebServer.h>
 
-void handlePostSegment(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
-void handlePutStatus(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
+void handlePostSegment(uint8_t *data, size_t &len,
+                       AsyncWebServerRequest *request);
+void handlePutStatus(uint8_t *data, size_t &len,
+                     AsyncWebServerRequest *request);
 void handleGetSegments(AsyncWebServerRequest *request);
 void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
 void handleNotFound(AsyncWebServerRequest *request);

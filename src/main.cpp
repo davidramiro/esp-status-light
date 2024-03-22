@@ -13,12 +13,11 @@
 #include <WiFi.h>
 #endif
 
-#include "Storage.h"
 #include "API.h"
 #include "LEDs.h"
+#include "Storage.h"
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   Log.begin(LOG_LEVEL, &Serial);
   while (!Serial)
@@ -31,8 +30,7 @@ void setup()
   WiFi.hostname(ESP_HOST_NAME);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   int8_t wifiStatusCode = WiFi.waitForConnectResult();
-  if (wifiStatusCode != WL_CONNECTED)
-  {
+  if (wifiStatusCode != WL_CONNECTED) {
     Log.errorln("Error connecting to WiFi, code %d", wifiStatusCode);
     return;
   }
@@ -42,7 +40,4 @@ void setup()
   initServer();
 }
 
-void loop()
-{
-  yield();
-}
+void loop() { yield(); }

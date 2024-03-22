@@ -1,5 +1,5 @@
-#include <EEPROM.h>
 #include "Main.h"
+#include <EEPROM.h>
 
 bool saveSegmentName(uint8 segment, const char name[]);
 bool fetchSegmentName(uint8 segment, char *outStr);
