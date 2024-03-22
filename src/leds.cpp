@@ -12,14 +12,14 @@ void initLEDs()
 
 void writeBufferToLeds(int8 indexBuffer[])
 {
-    uint8 brightness = getBrightnessFromEEPROM();
+    uint8 brightness = getBrightnessFromEEPROM() * 255 / 100;
 
     for (uint i = 0; i < NUM_SEGMENTS; i++)
     {
         StatusColor statusColor = colors[indexBuffer[i]];
-        uint8_t targetRed = statusColor.red * brightness / 100;
-        uint8_t targetGreen = statusColor.green * brightness / 100;
-        uint8_t targetBlue = statusColor.blue * brightness / 100;
+        uint8_t targetRed = statusColor.red * brightness;
+        uint8_t targetGreen = statusColor.green * brightness;
+        uint8_t targetBlue = statusColor.blue * brightness;
         uint32_t color = pixels.getPixelColor(i * ledsPerSegment);
         uint8_t red = (color >> 16) & 255;
         uint8_t green = (color >> 8) & 255;
@@ -35,30 +35,9 @@ void writeBufferToLeds(int8 indexBuffer[])
 
         while (red != targetRed || blue != targetBlue || green != targetGreen)
         {
-            if (red < targetRed)
-            {
-                red++;
-            }
-            else if (red > targetRed)
-            {
-                red--;
-            }
-            if (green < targetGreen)
-            {
-                green++;
-            }
-            else if (green > targetGreen)
-            {
-                green--;
-            }
-            if (blue < targetBlue)
-            {
-                blue++;
-            }
-            else if (blue > targetBlue)
-            {
-                blue--;
-            }
+            approachTargetValue(red, targetRed);
+            approachTargetValue(green, targetGreen);
+            approachTargetValue(blue, targetBlue);
 
             pixels.fill(pixels.Color(red, green, blue), i * ledsPerSegment, ledsPerSegment);
             pixels.show();
@@ -80,18 +59,9 @@ void turnOffLeds()
 
         while (red != 0 || blue != 0 || green != 0)
         {
-            if (red != 0)
-            {
-                red--;
-            }
-            if (blue != 0)
-            {
-                blue--;
-            }
-            if (green != 0)
-            {
-                green--;
-            }
+            approachTargetValue(red, 0);
+            approachTargetValue(green, 0);
+            approachTargetValue(blue, 0);
 
             pixels.fill(pixels.Color(red, green, blue), i * ledsPerSegment, ledsPerSegment);
             pixels.show();
@@ -112,4 +82,12 @@ int getColorIndexByName(const char *name)
     }
     Log.warningln("status color with name %s not found", name);
     return -1;
+}
+
+void approachTargetValue(uint8_t &value, uint8_t target) {
+    if (value < target) {
+        value++;
+    } else if (value > target) {
+        value--;
+    }
 }

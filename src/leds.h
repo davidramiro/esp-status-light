@@ -16,3 +16,4 @@ void initLEDs();
 void writeBufferToLeds(int8 indexBuffer[]);
 void turnOffLeds();
 int getColorIndexByName(const char *name);
+void approachTargetValue(uint8_t &value, uint8_t target);
