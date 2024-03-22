@@ -1,5 +1,5 @@
-#include "leds.h"
-#include "eeprom.h"
+#include "LEDs.h"
+#include "Storage.h"
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -12,7 +12,7 @@ void initLEDs()
 
 void writeBufferToLeds(int8 indexBuffer[])
 {
-    uint8 brightness = getBrightnessFromEEPROM() * 255 / 100;
+    uint8 brightness = fetchBrightness() * 255 / 100;
 
     for (uint i = 0; i < NUM_SEGMENTS; i++)
     {

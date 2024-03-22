@@ -7,7 +7,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
-#include "main.h"
+#include "Main.h"
 
 void handlePostSegment(uint8_t *data, size_t &len, AsyncWebServerRequest *request);
 void handlePutStatus(uint8_t *data, size_t &len, AsyncWebServerRequest *request);

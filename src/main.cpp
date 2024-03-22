@@ -1,4 +1,4 @@
-#include "main.h"
+#include "Main.h"
 
 #if __has_include("WifiCredentials.h")
 #include "WifiCredentials.h"
@@ -13,9 +13,9 @@
 #include <WiFi.h>
 #endif
 
-#include "eeprom.h"
-#include "server.h"
-#include "leds.h"
+#include "Storage.h"
+#include "API.h"
+#include "LEDs.h"
 
 void setup()
 {
@@ -24,7 +24,7 @@ void setup()
   while (!Serial)
     ;
 
-  initEEPROM();
+  initStorage();
   initLEDs();
 
   WiFi.mode(WIFI_STA);

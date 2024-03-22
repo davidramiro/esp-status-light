@@ -1,5 +1,5 @@
 #include <Adafruit_NeoPixel.h>
-#include "main.h"
+#include "Main.h"
 
 struct StatusColor
 {

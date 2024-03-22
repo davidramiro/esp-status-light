@@ -1,15 +1,15 @@
-#include "eeprom.h"
+#include "Storage.h"
 
-void initEEPROM()
+void initStorage()
 {
     EEPROM.begin(4096);
 
-    if (getBrightnessFromEEPROM() == 0) {
-        saveBrightnessToEEPROM(100);
+    if (fetchBrightness() == 0) {
+        saveBrightness(100);
     }
 }
 
-bool writeSegmentNameToEEPROM(uint8 segment, const char name[])
+bool saveSegmentName(uint8 segment, const char name[])
 {
     if (segment > 7)
     {
@@ -35,7 +35,7 @@ bool writeSegmentNameToEEPROM(uint8 segment, const char name[])
     return EEPROM.commit();
 }
 
-bool getNameFromEEPROM(uint8 segment, char *outStr)
+bool fetchSegmentName(uint8 segment, char *outStr)
 {
     uint8 startAddr = segment * NAME_BUFFER_LEN;
     uint8 length = EEPROM.read(startAddr);
@@ -59,7 +59,7 @@ bool getNameFromEEPROM(uint8 segment, char *outStr)
     return true;
 }
 
-bool findSegmentFromName(const char *name, uint8 *segment)
+bool findSegmentByName(const char *name, uint8 *segment)
 {
     Log.infoln("looking up name %s in eeprom", name);
 
@@ -68,7 +68,7 @@ bool findSegmentFromName(const char *name, uint8 *segment)
         Log.verboseln("trying segment %d", i);
 
         char eepromName[NAME_BUFFER_LEN] = {0};
-        bool success = getNameFromEEPROM(i, eepromName);
+        bool success = fetchSegmentName(i, eepromName);
         if (!success)
         {
             Log.errorln("could not read name from eeprom for segment %d", i);
@@ -88,13 +88,13 @@ bool findSegmentFromName(const char *name, uint8 *segment)
     return false;
 }
 
-bool saveBrightnessToEEPROM(uint8 brightness) {
+bool saveBrightness(uint8 brightness) {
     Log.verboseln("saving brightness value %d to eeprom", brightness);
     EEPROM.write(BRIGHTNESS_EEPROM_ADDR, brightness);
     return EEPROM.commit();
 }
 
-uint8 getBrightnessFromEEPROM() {
+uint8 fetchBrightness() {
     uint8 brightness = EEPROM.read(BRIGHTNESS_EEPROM_ADDR);
     Log.verboseln("read brightness %d from eeprom", brightness);
     return brightness;

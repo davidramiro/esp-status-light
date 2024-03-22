@@ -1,6 +1,6 @@
-#include "server.h"
-#include "eeprom.h"
-#include "leds.h"
+#include "API.h"
+#include "Storage.h"
+#include "LEDs.h"
 
 const char *mimeTypeText = "plain/text";
 
@@ -58,7 +58,7 @@ void handleGetSegments(AsyncWebServerRequest *request)
 
         JsonDocument doc;
 
-        bool success = getNameFromEEPROM(segment, name);
+        bool success = fetchSegmentName(segment, name);
         if (success)
         {
             doc["name"] = name;
@@ -81,7 +81,7 @@ void handleGetSegments(AsyncWebServerRequest *request)
         for (uint8 i = 0; i < NUM_SEGMENTS; i++)
         {
             char name[NAME_BUFFER_LEN];
-            bool success = getNameFromEEPROM(i, name);
+            bool success = fetchSegmentName(i, name);
             if (success)
             {
                 Log.verboseln("found name for adding to response: %s", name);
@@ -114,7 +114,7 @@ void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
         return;
     }
 
-    uint8 brightness = getBrightnessFromEEPROM();
+    uint8 brightness = fetchBrightness();
 
     if (obj.containsKey("brightness")) {
         brightness = obj["brightness"];
@@ -122,7 +122,7 @@ void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
             request->send(400, mimeTypeText,"invalid brightness, stay between 1 and 100");
             return;
         }
-        bool success = saveBrightnessToEEPROM(brightness);
+        bool success = saveBrightness(brightness);
         if (!success) {
             request->send(500, mimeTypeText,"error saving brightness");
             return;
@@ -182,7 +182,7 @@ void handlePostSegment(uint8_t *data, size_t &len, AsyncWebServerRequest *reques
         return;
     }
 
-    bool success = writeSegmentNameToEEPROM(segment, name);
+    bool success = saveSegmentName(segment, name);
     if (!success)
     {
         Log.errorln("error writing name to eeprom");
@@ -218,7 +218,7 @@ void handlePutStatus(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
     else if (obj.containsKey("name"))
     {
         const char *name = obj["name"];
-        bool found = findSegmentFromName(name, &segment);
+        bool found = findSegmentByName(name, &segment);
         if (!found)
         {
             Log.warningln("segment for name %s not found", name);
@@ -248,7 +248,7 @@ void handlePutStatus(uint8_t *data, size_t &len, AsyncWebServerRequest *request)
 
     writeBufferToLeds(statusColorIndexBuffer);
 
-    sprintf(responseBuffer, "changed segment %d to status %s with brightness %d", segment, status, getBrightnessFromEEPROM());
+    sprintf(responseBuffer, "changed segment %d to status %s with brightness %d", segment, status, fetchBrightness());
     request->send(200, mimeTypeText, String(responseBuffer));
 }
 
