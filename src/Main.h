@@ -1,3 +1,6 @@
+#pragma once
+
+#include <Adafruit_NeoPixel.h>
 #include <ArduinoLog.h>
 
 #define PIN D2

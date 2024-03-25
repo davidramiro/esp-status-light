@@ -23,8 +23,8 @@ void setup() {
   while (!Serial)
     ;
 
-  initStorage();
-  initLEDs();
+  Storage storage;
+  LEDs leds;
 
   WiFi.mode(WIFI_STA);
   WiFi.hostname(ESP_HOST_NAME);
@@ -37,7 +37,8 @@ void setup() {
 
   Log.infoln("IP: %p", WiFi.localIP());
 
-  initServer();
+  API api(leds, storage);
+  api.init();
 }
 
 void loop() { yield(); }

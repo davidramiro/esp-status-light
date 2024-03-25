@@ -1,6 +1,6 @@
 #include "Storage.h"
 
-void initStorage() {
+Storage::Storage() {
   EEPROM.begin(4096);
 
   if (fetchBrightness() == 0) {
@@ -8,7 +8,7 @@ void initStorage() {
   }
 }
 
-bool saveSegmentName(uint8 segment, const char name[]) {
+bool Storage::saveSegmentName(uint8 segment, const char name[]) {
   if (segment > 7) {
     Log.errorln("out of bounds, segment %d greater than 7 allowed", segment);
     return false;
@@ -31,7 +31,7 @@ bool saveSegmentName(uint8 segment, const char name[]) {
   return EEPROM.commit();
 }
 
-bool fetchSegmentName(uint8 segment, char *outStr) {
+bool Storage::fetchSegmentName(uint8 segment, char *outStr) {
   uint8 startAddr = segment * NAME_BUFFER_LEN;
   uint8 length = EEPROM.read(startAddr);
 
@@ -52,7 +52,7 @@ bool fetchSegmentName(uint8 segment, char *outStr) {
   return true;
 }
 
-bool findSegmentByName(const char *name, uint8 *segment) {
+bool Storage::findSegmentByName(const char *name, uint8 *segment) {
   Log.infoln("looking up name %s in eeprom", name);
 
   for (uint8 i = 0; i < NUM_SEGMENTS; i++) {
@@ -77,13 +77,13 @@ bool findSegmentByName(const char *name, uint8 *segment) {
   return false;
 }
 
-bool saveBrightness(uint8 brightness) {
+bool Storage::saveBrightness(uint8 brightness) {
   Log.verboseln("saving brightness value %d to eeprom", brightness);
   EEPROM.write(BRIGHTNESS_EEPROM_ADDR, brightness);
   return EEPROM.commit();
 }
 
-uint8 fetchBrightness() {
+uint8 Storage::fetchBrightness() {
   uint8 brightness = EEPROM.read(BRIGHTNESS_EEPROM_ADDR);
   Log.verboseln("read brightness %d from eeprom", brightness);
   return brightness;

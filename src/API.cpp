@@ -2,16 +2,15 @@
 #include "LEDs.h"
 #include "Storage.h"
 
-const char *mimeTypeText = "plain/text";
+API::API(LEDs &leds, Storage &storage) {
+  this->server = new AsyncWebServer(80);
+  this->leds = &leds;
+  this->storage = &storage;
+}
 
-char responseBuffer[100];
-int8 statusColorIndexBuffer[NUM_SEGMENTS];
-
-AsyncWebServer server(80);
-
-void initServer() {
+void API::init() {
   Log.verboseln("setting default LED color");
-  int defaultIndex = getColorIndexByName(DEFAULT_STATUS);
+  int defaultIndex = LEDs::getColorIndexByName(DEFAULT_STATUS);
   if (defaultIndex == -1) {
     Log.fatalln("could not find default status %s", DEFAULT_STATUS);
     return;
@@ -21,31 +20,37 @@ void initServer() {
     statusColorIndexBuffer[i] = defaultIndex;
   }
 
-  server.on(
+  this->server->on(
       "/api/segments", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
-      [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
-         size_t index,
-         size_t total) { handlePostSegment(data, len, request); });
+      [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
+             size_t index,
+             size_t total) { this->handlePostSegment(data, len, request); });
 
-  server.on(
+  this->server->on(
       "/api/status", HTTP_PUT, [](AsyncWebServerRequest *request) {}, NULL,
-      [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
-         size_t index, size_t total) { handlePutStatus(data, len, request); });
+      [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
+             size_t index,
+             size_t total) { this->handlePutStatus(data, len, request); });
 
-  server.on("/api/segments", HTTP_GET,
-            [](AsyncWebServerRequest *request) { handleGetSegments(request); });
+  this->server->on("/api/segments", HTTP_GET,
+                   [this](AsyncWebServerRequest *request) {
+                     this->handleGetSegments(request);
+                   });
 
-  server.on(
+  this->server->on(
       "/api/leds", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL,
-      [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
-         size_t index, size_t total) { handlePutLEDs(data, len, request); });
+      [this](AsyncWebServerRequest *request, uint8_t *data, size_t len,
+             size_t index,
+             size_t total) { this->handlePutLEDs(data, len, request); });
 
-  server.onNotFound(handleNotFound);
+  this->server->onNotFound([](AsyncWebServerRequest *request) {
+    request->send(404, MIME_TYPE_TEXT, "not found");
+  });
 
-  server.begin();
+  this->server->begin();
 }
 
-void handleGetSegments(AsyncWebServerRequest *request) {
+void API::handleGetSegments(AsyncWebServerRequest *request) {
   Log.infoln("GET /api/segments");
 
   if (request->hasParam("segment")) {
@@ -57,9 +62,12 @@ void handleGetSegments(AsyncWebServerRequest *request) {
 
     JsonDocument doc;
 
-    bool success = fetchSegmentName(segment, name);
+    bool success = this->storage->fetchSegmentName(segment, name);
+    Log.verboseln("fetched segment name %s", name);
     if (success) {
       doc["name"] = name;
+    } else {
+      Log.warningln("could not fetch segment name for %s", name);
     }
 
     doc["segment"] = segment;
@@ -76,7 +84,7 @@ void handleGetSegments(AsyncWebServerRequest *request) {
     JsonDocument doc;
     for (uint8 i = 0; i < NUM_SEGMENTS; i++) {
       char name[NAME_BUFFER_LEN];
-      bool success = fetchSegmentName(i, name);
+      bool success = this->storage->fetchSegmentName(i, name);
       if (success) {
         Log.verboseln("found name for adding to response: %s", name);
         doc[i]["name"] = name;
@@ -94,7 +102,8 @@ void handleGetSegments(AsyncWebServerRequest *request) {
   }
 }
 
-void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request) {
+void API::handlePutLEDs(uint8_t *data, size_t &len,
+                        AsyncWebServerRequest *request) {
   Log.infoln("PUT /api/leds");
 
   JsonDocument obj;
@@ -102,22 +111,25 @@ void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request) {
 
   if (error) {
     Log.errorln("error deserializing json body: %s", error.c_str());
-    request->send(500, mimeTypeText, error.f_str());
+    request->send(500, MIME_TYPE_TEXT, error.f_str());
     return;
   }
 
-  uint8 brightness = fetchBrightness();
+  uint8 brightness = this->storage->fetchBrightness();
+
+  Log.verboseln("handler: eeprom read brightness %d", brightness);
 
   if (obj.containsKey("brightness")) {
     brightness = obj["brightness"];
+    Log.verboseln("handler: new brightness from request: %d", brightness);
     if (brightness > 100 || brightness < 1) {
-      request->send(400, mimeTypeText,
+      request->send(400, MIME_TYPE_TEXT,
                     "invalid brightness, stay between 1 and 100");
       return;
     }
-    bool success = saveBrightness(brightness);
+    bool success = this->storage->saveBrightness(brightness);
     if (!success) {
-      request->send(500, mimeTypeText, "error saving brightness");
+      request->send(500, MIME_TYPE_TEXT, "error saving brightness");
       return;
     }
   }
@@ -129,18 +141,18 @@ void handlePutLEDs(uint8_t *data, size_t &len, AsyncWebServerRequest *request) {
   }
 
   if (ledStatus) {
-    writeBufferToLeds(statusColorIndexBuffer);
+    this->leds->writeBufferToLeds(statusColorIndexBuffer, brightness);
   } else {
     brightness = 0;
-    turnOffLeds();
+    this->leds->turnOff();
   }
 
   sprintf(responseBuffer, "leds set to %d", brightness);
-  request->send(200, mimeTypeText, String(responseBuffer));
+  request->send(200, MIME_TYPE_TEXT, String(responseBuffer));
 }
 
-void handlePostSegment(uint8_t *data, size_t &len,
-                       AsyncWebServerRequest *request) {
+void API::handlePostSegment(uint8_t *data, size_t &len,
+                            AsyncWebServerRequest *request) {
   Log.infoln("POST /api/segments");
 
   JsonDocument obj;
@@ -148,17 +160,17 @@ void handlePostSegment(uint8_t *data, size_t &len,
 
   if (error) {
     Log.errorln("error deserializing json body: %s", error.c_str());
-    request->send(500, mimeTypeText, error.f_str());
+    request->send(500, MIME_TYPE_TEXT, error.f_str());
     return;
   }
 
   uint8_t segment = obj["segment"];
-  if (ledsPerSegment * (segment + 1) > NUMPIXELS) {
+  if (LEDs::LEDS_PER_SEGMENT * (segment + 1) > NUMPIXELS) {
     sprintf(responseBuffer,
             "requested segment starts at LED: %d, available LEDS: %d",
-            ledsPerSegment * (segment + 1), NUMPIXELS);
+            LEDs::LEDS_PER_SEGMENT * (segment + 1), NUMPIXELS);
     Log.warningln(responseBuffer);
-    request->send(400, mimeTypeText, String(responseBuffer));
+    request->send(400, MIME_TYPE_TEXT, String(responseBuffer));
     return;
   }
 
@@ -168,23 +180,23 @@ void handlePostSegment(uint8_t *data, size_t &len,
                   strlen(name), NAME_BUFFER_LEN - 2);
 
     sprintf(responseBuffer, "max chars for name: %d", (NAME_BUFFER_LEN - 2));
-    request->send(400, mimeTypeText, String(responseBuffer));
+    request->send(400, MIME_TYPE_TEXT, String(responseBuffer));
     return;
   }
 
-  bool success = saveSegmentName(segment, name);
+  bool success = this->storage->saveSegmentName(segment, name);
   if (!success) {
     Log.errorln("error writing name to eeprom");
-    request->send(500, mimeTypeText, "internal error saving segment name");
+    request->send(500, MIME_TYPE_TEXT, "internal error saving segment name");
     return;
   }
 
   sprintf(responseBuffer, "saved %s to segment %d", name, segment);
-  request->send(200, mimeTypeText, String(responseBuffer));
+  request->send(200, MIME_TYPE_TEXT, String(responseBuffer));
 }
 
-void handlePutStatus(uint8_t *data, size_t &len,
-                     AsyncWebServerRequest *request) {
+void API::handlePutStatus(uint8_t *data, size_t &len,
+                          AsyncWebServerRequest *request) {
   Log.infoln("PUT /api/status");
 
   JsonDocument obj;
@@ -192,7 +204,7 @@ void handlePutStatus(uint8_t *data, size_t &len,
 
   if (error) {
     Log.errorln("error deserializing request: %s", error.c_str());
-    request->send(500, mimeTypeText, error.f_str());
+    request->send(500, MIME_TYPE_TEXT, error.f_str());
     return;
   }
 
@@ -203,10 +215,10 @@ void handlePutStatus(uint8_t *data, size_t &len,
     Log.verboseln("status change request for segment %d", segment);
   } else if (obj.containsKey("name")) {
     const char *name = obj["name"];
-    bool found = findSegmentByName(name, &segment);
+    bool found = this->storage->findSegmentByName(name, &segment);
     if (!found) {
       Log.warningln("segment for name %s not found", name);
-      request->send(404, mimeTypeText, "name not found");
+      request->send(404, MIME_TYPE_TEXT, "name not found");
       return;
     }
 
@@ -214,28 +226,25 @@ void handlePutStatus(uint8_t *data, size_t &len,
                   name, segment);
   }
 
-  if (ledsPerSegment * (segment + 1) > NUMPIXELS) {
-    request->send(400, mimeTypeText, "invalid segment number");
+  if (LEDs::LEDS_PER_SEGMENT * (segment + 1) > NUMPIXELS) {
+    request->send(400, MIME_TYPE_TEXT, "invalid segment number");
     return;
   }
 
   const char *status = obj["status"];
 
-  int index = getColorIndexByName(status);
+  int index = LEDs::getColorIndexByName(status);
   if (index == -1) {
-    request->send(400, mimeTypeText, "invalid status identifier");
+    request->send(400, MIME_TYPE_TEXT, "invalid status identifier");
     return;
   }
 
   statusColorIndexBuffer[segment] = index;
 
-  writeBufferToLeds(statusColorIndexBuffer);
+  this->leds->writeBufferToLeds(statusColorIndexBuffer,
+                                storage->fetchBrightness());
 
   sprintf(responseBuffer, "changed segment %d to status %s with brightness %d",
-          segment, status, fetchBrightness());
-  request->send(200, mimeTypeText, String(responseBuffer));
-}
-
-void handleNotFound(AsyncWebServerRequest *request) {
-  request->send(404, mimeTypeText, "not found");
+          segment, status, this->storage->fetchBrightness());
+  request->send(200, MIME_TYPE_TEXT, String(responseBuffer));
 }

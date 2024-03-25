@@ -1,21 +1,30 @@
+#pragma once
+
 #include "Main.h"
-#include <Adafruit_NeoPixel.h>
 
 struct StatusColor {
   char *name;
-  int8_t red;
-  int8_t green;
-  int8_t blue;
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
 };
 
-const int ledsPerSegment = NUMPIXELS / NUM_SEGMENTS;
 const StatusColor colors[] = {{strdup("free"), 0, 127, 0},
                               {strdup("dnd"), 127, 0, 0},
                               {strdup("occupied"), 127, 127, 0},
                               {strdup("off"), 0, 0, 0}};
 
-void initLEDs();
-void writeBufferToLeds(int8 indexBuffer[]);
-void turnOffLeds();
-int getColorIndexByName(const char *name);
-void approachTargetValue(uint8_t &value, uint8_t target);
+class LEDs {
+
+public:
+  LEDs();
+
+  void init();
+  void writeBufferToLeds(int8 indexBuffer[], int brightness);
+  void turnOff();
+  static int getColorIndexByName(const char *name);
+  static constexpr const int LEDS_PER_SEGMENT = NUMPIXELS / NUM_SEGMENTS;
+
+private:
+  static void approachTargetValue(uint8_t &value, uint8_t target);
+};
